@@ -123,3 +123,35 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Skeleton loading placeholders */
+.skeleton {
+  @apply animate-pulse rounded-md bg-muted;
+}
+.header-image.skeleton {
+  @apply size-14;
+}
+.header-line-sm.skeleton {
+  @apply h-4 w-24;
+}
+.header-line-lg.skeleton {
+  @apply h-8 w-32;
+}
+.chart-skeleton.skeleton {
+  @apply h-[360px] w-full;
+}
+.name-image.skeleton {
+  @apply size-9 rounded-full;
+}
+.name-line.skeleton {
+  @apply h-4 w-20;
+}
+.change-icon.skeleton {
+  @apply size-4;
+}
+.change-line.skeleton {
+  @apply h-4 w-12;
+}
+.price-line.skeleton {
+  @apply h-4 w-16;
+}
