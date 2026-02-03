@@ -5,10 +5,10 @@ import DataTable from '../data-table';
 
 export const CoinOverviewFallback = () => {
   return (
-    <div id="coin-overview-fallback">
-      <div className="header pt-2">
+    <div id="coin-overview-fallback" className="h-full min-h-0 flex flex-col">
+      <div className="pt-2 flex items-center gap-3">
         <div className="header-image skeleton" />
-        <div className="info">
+        <div className="min-w-0">
           <div className="header-line-sm skeleton" />
           <div className="header-line-lg skeleton" />
         </div>
@@ -42,6 +42,8 @@ export const TrendingCoinsFallback = () => {
     },
     {
       header: 'Price',
+      headClassName: 'hidden sm:table-cell',
+      cellClassName: 'hidden sm:table-cell',
       cell: () => <div className="price-line skeleton" />,
     },
   ];
@@ -49,14 +51,16 @@ export const TrendingCoinsFallback = () => {
   const dummyData = Array.from({ length: 6 }, (_, i) => ({ id: i }));
 
   return (
-    <div id="trending-coins-fallback">
-      <h4>Trending Coins</h4>
-      <DataTable
-        data={dummyData}
-        columns={columns as typeof columns}
-        rowKey={(item: { id: number }) => item.id}
-        tableClassName="trending-coins-table"
-      />
+    <div id="trending-coins-fallback" className="h-full min-h-0 flex flex-col">
+      <h4 className="text-lg font-semibold tracking-tight shrink-0">Trending Coins</h4>
+      <div className="flex-1 min-h-0 flex flex-col mt-3">
+        <DataTable
+          data={dummyData}
+          columns={columns as typeof columns}
+          rowKey={(item: { id: number }) => item.id}
+          tableClassName="trending-coins-table"
+        />
+      </div>
     </div>
   );
 };
@@ -65,12 +69,12 @@ export const CategoriesFallback = () => {
   const columns = [
     {
       header: 'Category',
-      cellClassName: 'category-cell',
       cell: () => <div className="category-line skeleton" />,
     },
     {
       header: 'Top Gainers',
-      cellClassName: 'top-gainers-cell',
+      headClassName: 'hidden sm:table-cell',
+      cellClassName: 'hidden sm:table-cell',
       cell: () => (
         <div className="flex gap-1">
           <div className="gainer-image skeleton" />
@@ -81,7 +85,6 @@ export const CategoriesFallback = () => {
     },
     {
       header: '24h Change',
-      cellClassName: 'change-header-cell',
       cell: () => (
         <div className="change-cell">
           <div className="change-icon skeleton" />
@@ -91,12 +94,14 @@ export const CategoriesFallback = () => {
     },
     {
       header: 'Market Cap',
-      cellClassName: 'market-cap-cell',
+      headClassName: 'hidden md:table-cell',
+      cellClassName: 'hidden md:table-cell',
       cell: () => <div className="value-skeleton-lg skeleton" />,
     },
     {
       header: '24h Volume',
-      cellClassName: 'volume-cell',
+      headClassName: 'hidden lg:table-cell',
+      cellClassName: 'hidden lg:table-cell',
       cell: () => <div className="value-skeleton-md skeleton" />,
     },
   ];
@@ -105,7 +110,7 @@ export const CategoriesFallback = () => {
 
   return (
     <div id="categories-fallback">
-      <h4>Top Categories</h4>
+      <h4 className="text-lg font-semibold tracking-tight">Top Categories</h4>
       <DataTable
         data={dummyData}
         columns={columns}

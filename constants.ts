@@ -99,9 +99,6 @@ export const PERIOD_CONFIG: Record<
   weekly: { days: 7, interval: 'hourly' },
   monthly: { days: 30, interval: 'hourly' },
   '3months': { days: 90, interval: 'daily' },
-  '6months': { days: 180, interval: 'daily' },
-  yearly: { days: 365, interval: 'daily' },
-  max: { days: 'max', interval: 'daily' },
 };
 
 export const PERIOD_BUTTONS: { value: Period; label: string }[] = [
@@ -109,8 +106,6 @@ export const PERIOD_BUTTONS: { value: Period; label: string }[] = [
   { value: 'weekly', label: '1W' },
   { value: 'monthly', label: '1M' },
   { value: '3months', label: '3M' },
-  { value: '6months', label: '6M' },
-
 ];
 
 export const LIVE_INTERVAL_BUTTONS: { value: '1s' | '1m'; label: string }[] = [

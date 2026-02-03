@@ -13,20 +13,24 @@ export function formatCurrency(
   showSymbol?: boolean,
 ) {
   if (value === null || value === undefined || isNaN(value)) {
-    return showSymbol !== false ? '$0.00' : '0.00';
+    return showSymbol !== false ? '$0' : '0';
   }
+
+  const abs = Math.abs(value);
+  const minFrac = digits ?? (abs >= 1 ? 0 : 0);
+  const maxFrac = digits ?? (abs >= 1 ? 0 : 4);
 
   if (showSymbol === undefined || showSymbol === true) {
     return value.toLocaleString(undefined, {
       style: 'currency',
       currency: currency?.toUpperCase() || 'USD',
-      minimumFractionDigits: digits ?? 2,
-      maximumFractionDigits: digits ?? 2,
+      minimumFractionDigits: minFrac,
+      maximumFractionDigits: maxFrac,
     });
   }
   return value.toLocaleString(undefined, {
-    minimumFractionDigits: digits ?? 2,
-    maximumFractionDigits: digits ?? 2,
+    minimumFractionDigits: minFrac,
+    maximumFractionDigits: maxFrac,
   });
 }
 
