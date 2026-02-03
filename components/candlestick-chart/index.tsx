@@ -29,7 +29,7 @@ const CandlestickChart = ({
   children,
   data,
   coinId,
-  height = 360,
+  height,
   initialPeriod = 'daily',
   liveOhlcv = null,
   mode = 'historical',
@@ -46,6 +46,22 @@ const CandlestickChart = ({
   const [ohlcData, setOhlcData] = useState<OHLCData[]>(data ?? []);
   const [isPending, startTransition] = useTransition();
   const [periodError, setPeriodError] = useState<string | null>(null);
+  const [responsiveHeight, setResponsiveHeight] = useState<number>(() => {
+    if (typeof window === 'undefined') return 500;
+    return window.matchMedia('(max-width: 640px)').matches ? 320 : 500;
+  });
+
+  // Subscribe to viewport changes when height is not controlled by prop
+  useEffect(() => {
+    if (height != null) return;
+
+    const mq = window.matchMedia('(max-width: 640px)');
+    const handleChange = () => setResponsiveHeight(mq.matches ? 280 : 400);
+    mq.addEventListener('change', handleChange);
+    return () => mq.removeEventListener('change', handleChange);
+  }, [height]);
+
+  const chartHeight = height ?? responsiveHeight;
 
   // Pre-populate cache with initial data
   useEffect(() => {
@@ -87,58 +103,14 @@ const CandlestickChart = ({
       const isRateLimited =
         e instanceof Error && e.message.includes('429');
 
-      if (isRateLimited) {
-        startTransition(() => {
-          setPeriod(previousPeriod);
-          setPeriodError(
-            'Rate limited. Please wait a moment and try again.',
-          );
-        });
-        return;
-      }
-
-      // 1Y and Max often fail on CoinGecko free/demo plan (500 or plan-restricted).
-      const isLongPeriod = selectedPeriod === 'yearly' || selectedPeriod === 'max';
-      if (isLongPeriod) {
-        const fallbackCached = periodCacheRef.current['6months'];
-        if (fallbackCached?.length) {
-          startTransition(() => {
-            setOhlcData(fallbackCached);
-            setPeriod('6months');
-            setPeriodError(
-              '1Y and Max require a paid CoinGecko plan. Showing 6M instead.',
-            );
-          });
-          return;
-        }
-
-        try {
-          const fallbackData = await fetcher<OHLCData[]>(
-            `/coins/${coinId}/ohlc`,
-            { vs_currency: 'usd', days: '180' },
-            OHLC_REVALIDATE,
-          );
-          periodCacheRef.current['6months'] = fallbackData ?? [];
-          startTransition(() => {
-            setOhlcData(fallbackData ?? []);
-            setPeriod('6months');
-            setPeriodError(
-              '1Y and Max require a paid CoinGecko plan. Showing 6M instead.',
-            );
-          });
-        } catch (fallbackErr) {
-          console.error('Fallback fetch also failed', fallbackErr);
-          startTransition(() => {
-            setPeriod(previousPeriod);
-            setPeriodError('Could not load chart data. Please try again.');
-          });
-        }
-      } else {
-        startTransition(() => {
-          setPeriod(previousPeriod);
-          setPeriodError('Could not load chart data. Please try again.');
-        });
-      }
+      startTransition(() => {
+        setPeriod(previousPeriod);
+        setPeriodError(
+          isRateLimited
+            ? 'Rate limited. Please wait a moment and try again.'
+            : 'Could not load chart data. Please try again.',
+        );
+      });
     }
   };
 
@@ -159,7 +131,7 @@ const CandlestickChart = ({
     const showTime = ['daily', 'weekly', 'monthly'].includes(initialPeriod);
 
     const chart = createChart(container, {
-      ...getChartConfig(height, showTime),
+      ...getChartConfig(chartHeight, showTime),
       width: container.clientWidth,
     });
     const series = chart.addSeries(CandlestickSeries, getCandlestickConfig());
@@ -179,7 +151,7 @@ const CandlestickChart = ({
       chartRef.current = null;
       candleSeriesRef.current = null;
     };
-  }, [height, initialPeriod]);
+  }, [initialPeriod, chartHeight]);
 
   // Update time scale visibility when period changes (hourly vs daily)
   useEffect(() => {
@@ -230,7 +202,7 @@ const CandlestickChart = ({
   }, [ohlcData, liveOhlcv, mode]);
 
   return (
-    <div id="candlestick-chart">
+    <div id="candlestick-chart" className="min-w-0">
       <div className="chart-header flex flex-wrap items-center justify-between gap-4">
         <div className="flex-1 min-w-0">{children}</div>
 
@@ -253,9 +225,9 @@ const CandlestickChart = ({
                   aria-pressed={period === value}
                   aria-label={`${label} period`}
                   className={cn(
-                    'relative px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                    'relative px-3 py-2 sm:py-1.5 text-sm sm:text-xs font-medium rounded-md transition-colors',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                    'disabled:opacity-50 disabled:cursor-not-allowed ',
                     period === value
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
@@ -286,7 +258,7 @@ const CandlestickChart = ({
                     aria-pressed={liveInterval === value}
                     aria-label={`${label} update interval`}
                     className={cn(
-                      'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                    'px-3 py-2 sm:py-1.5 text-sm sm:text-xs font-medium rounded-md transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       'disabled:opacity-50 disabled:cursor-not-allowed',
                       liveInterval === value
@@ -312,7 +284,7 @@ const CandlestickChart = ({
         </p>
       )}
 
-      <div ref={chartContainerRef} className="chart" style={{ height }} />
+      <div ref={chartContainerRef} className="chart min-w-0 overflow-hidden" style={{ height: chartHeight }} />
     </div>
   );
 };

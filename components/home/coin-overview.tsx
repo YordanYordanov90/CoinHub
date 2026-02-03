@@ -28,18 +28,28 @@ const CoinOverview = async () => {
   }
 
   return (
-    <div id="coin-overview">
-      <CandlestickChart data={coinOHLCData} coinId={COIN_ID}>
-        <div className="header pt-2">
-          <Image src={coin.image.large} alt={coin.name} width={56} height={56} />
-          <div className="info">
-            <p>
+    <div className="h-full min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col">
+        <CandlestickChart data={coinOHLCData} coinId={COIN_ID}>
+        <div className="pt-2 flex items-center gap-3">
+          <Image
+            src={coin.image.large}
+            alt={coin.name}
+            width={48}
+            height={48}
+            className="shrink-0 rounded-full"
+          />
+          <div className="min-w-0">
+            <p className="text-sm text-muted-foreground truncate">
               {coin.name} / {coin.symbol.toUpperCase()}
             </p>
-            <h1>{formatCurrency(coin.market_data.current_price.usd)}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {formatCurrency(coin.market_data.current_price.usd)}
+            </h1>
           </div>
         </div>
       </CandlestickChart>
+      </div>
     </div>
   );
 };

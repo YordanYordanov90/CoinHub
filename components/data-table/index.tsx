@@ -18,6 +18,8 @@ const DataTable =<T,>({
   headerRowClassName,
   bodyRowClassName,
   headerClassName,
+  headerCellClassName,
+  bodyCellClassName,
 }: DataTableProps<T>) => {
   return (
    <Table className={cn('custom-scrollbar', tableClassName)}>
@@ -26,7 +28,11 @@ const DataTable =<T,>({
           {columns.map((column, i) => (
             <TableHead
               key={i}
-              className={cn('bg-muted/50 text-muted-foreground py-4 first:pl-5 last:pr-5 font-medium')}
+              className={cn(
+                'bg-muted/50 text-muted-foreground py-4 first:pl-5 last:pr-5 font-medium',
+                headerCellClassName,
+                column.headClassName,
+              )}
             >
               {column.header}
             </TableHead>
@@ -43,7 +49,14 @@ const DataTable =<T,>({
             )}
           >
             {columns.map((column, columnIndex) => (
-              <TableCell key={columnIndex} className={cn('py-4 first:pl-5 last:pr-5')}>
+              <TableCell
+                key={columnIndex}
+                className={cn(
+                  'py-4 first:pl-5 last:pr-5',
+                  bodyCellClassName,
+                  column.cellClassName,
+                )}
+              >
                 {column.cell(row, rowIndex)}
               </TableCell>
             ))}
