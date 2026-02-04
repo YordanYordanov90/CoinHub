@@ -5,20 +5,12 @@ import {
   DeepPartial
 } from 'lightweight-charts';
 
+/** Single source of truth for main nav; imported by Header. */
 export const navItems = [
-  {
-    label: 'Home',
-    href: '/',
-  },
-  {
-    label: 'Search',
-    href: '/',
-  },
-  {
-    label: 'All Coins',
-    href: '/coins',
-  },
-];
+  { label: 'Home', href: '/' },
+  { label: 'Search', href: '/search' },
+  { label: 'All Coins', href: '/coins' },
+] as const;
 
 const CHART_COLORS = {
   background: '#0b1116',

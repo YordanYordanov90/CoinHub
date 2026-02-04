@@ -6,14 +6,14 @@ import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { Coins, Home, MenuIcon, Search, X, ChevronRight } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
+import { navItems } from "@/constants"
 
-
-const navLinks = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/coins", label: "All Coins", icon: Coins },
-] as const
+const iconByHref: Record<string, LucideIcon> = {
+  "/": Home,
+  "/search": Search,
+  "/coins": Coins,
+}
 
 const Header = () => {
   const pathname = usePathname()
@@ -120,18 +120,17 @@ const Header = () => {
             width={125}
             height={40}
             priority
-           
           />
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex md:items-center md:gap-1">
-          {navLinks.map((link) => (
+          {navItems.map((item) => (
             <NavLink
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              icon={"icon" in link ? link.icon : undefined}
+              key={item.href}
+              href={item.href}
+              label={item.label}
+              icon={iconByHref[item.href]}
             />
           ))}
         </nav>
@@ -206,12 +205,12 @@ const Header = () => {
           </div>
 
           <div className="flex flex-col gap-1 p-3">
-            {navLinks.map((link) => (
+            {navItems.map((item) => (
               <NavLink
-                key={link.href}
-                href={link.href}
-                label={link.label}
-                icon={"icon" in link ? link.icon : undefined}
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={iconByHref[item.href]}
                 isMobile
                 onNavigate={() => setIsOpen(false)}
               />

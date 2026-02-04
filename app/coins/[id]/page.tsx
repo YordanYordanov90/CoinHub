@@ -2,16 +2,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { fetcher } from '@/lib/coingecko.actions';
-import { formatCurrency, formatPercentage, cn } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import CandlestickChart from '@/components/candlestick-chart';
+import { PriceChangeDisplay } from '@/components/ui/price-change';
+
+
+/** CoinGecko coin ids: lowercase letters, digits, hyphens; length 1–50. */
+function isValidCoinId(id: string): boolean {
+  return /^[a-z0-9_-]{1,50}$/i.test(id);
+}
 
 const CoinPage = async ({ params }: NextPageProps) => {
   const { id } = await params;
 
+  if (!isValidCoinId(id)) notFound();
+
   let coin: CoinDetailsData | null = null;
   let coinOHLCData: OHLCData[] | null = null;
 
-  const coinEndpoint = `/coins/${encodeURIComponent(id)}`;
+  const coinEndpoint = `/coins/${id}`;
 
   try {
     [coin, coinOHLCData] = await Promise.all([
@@ -93,14 +102,8 @@ const CoinPage = async ({ params }: NextPageProps) => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">24h change</p>
-              <p
-                className={cn(
-                  'text-xl font-medium',
-                  priceChange24h != null && priceChange24h >= 0 && 'text-green-600',
-                  priceChange24h != null && priceChange24h < 0 && 'text-red-500',
-                )}
-              >
-                {priceChange24h != null ? formatPercentage(priceChange24h) : '—'}
+              <p className="text-xl font-medium">
+                <PriceChangeDisplay value={priceChange24h} size="lg" />
               </p>
             </div>
             <div>

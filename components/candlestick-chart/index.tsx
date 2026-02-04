@@ -15,7 +15,6 @@ import {
   ISeriesApi,
   type UTCTimestamp,
 } from 'lightweight-charts';
-import { fetcher } from '@/lib/coingecko.actions';
 import { cn, convertOHLCData } from '@/lib/utils';
 
 /** Converts OHLC data from CoinGecko format (ms timestamps) to chart format (seconds) */
@@ -70,8 +69,6 @@ const CandlestickChart = ({
     }
   }, [data, initialPeriod]);
 
-  const OHLC_REVALIDATE = 300;
-
   const fetchOHLCData = async (
     selectedPeriod: Period,
     previousPeriod: Period,
@@ -85,13 +82,15 @@ const CandlestickChart = ({
     }
 
     const { days } = PERIOD_CONFIG[selectedPeriod];
+    const url = `/api/coins/${encodeURIComponent(coinId)}/ohlc?days=${encodeURIComponent(String(days))}`;
 
     try {
-      const newData = await fetcher<OHLCData[]>(
-        `/coins/${coinId}/ohlc`,
-        { vs_currency: 'usd', days: String(days) },
-        OHLC_REVALIDATE,
-      );
+      const res = await fetch(url);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`OHLC fetch failed ${res.status}: ${text.slice(0, 100)}`);
+      }
+      const newData = (await res.json()) as OHLCData[];
 
       periodCacheRef.current[selectedPeriod] = newData ?? [];
       startTransition(() => {

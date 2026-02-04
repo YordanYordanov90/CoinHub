@@ -1,10 +1,10 @@
 import { fetcher } from '@/lib/coingecko.actions';
 
 import Image from 'next/image';
-import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
-import { TrendingDown, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import { CategoriesFallback } from './fallback';
 import DataTable from '../data-table';
+import { PriceChangeDisplay } from '@/components/ui/price-change';
 
 const Categories = async () => {
   try {
@@ -32,22 +32,13 @@ const Categories = async () => {
       },
       {
         header: '24h Change',
-        cell: (category) => {
-          const isTrendingUp = category.market_cap_change_24h > 0;
-
-          return (
-            <div className={cn('change-cell', isTrendingUp ? 'text-green-500' : 'text-red-500')}>
-              <p className="flex items-center">
-                {formatPercentage(category.market_cap_change_24h)}
-                {isTrendingUp ? (
-                  <TrendingUp width={16} height={16} />
-                ) : (
-                  <TrendingDown width={16} height={16} />
-                )}
-              </p>
-            </div>
-          );
-        },
+        cellClassName: 'change-cell',
+        cell: (category) => (
+          <PriceChangeDisplay
+            value={category.market_cap_change_24h}
+            showIcon
+          />
+        ),
       },
       {
         header: 'Market Cap',

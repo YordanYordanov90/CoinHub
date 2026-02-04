@@ -2,9 +2,10 @@ import { fetcher } from '@/lib/coingecko.actions';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { cn, formatPercentage, formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import DataTable from '@/components/data-table';
 import CoinsPagination from '@/components/coins-pagination';
+import { PriceChangeDisplay } from '@/components/ui/price-change';
 
 
 /** Free/Demo tier only accepts page=1 for /coins/markets. Fetch once, paginate in-app. */
@@ -64,21 +65,9 @@ const Coins = async ({ searchParams }: NextPageProps) => {
     {
       header: '24h Change',
       cellClassName: 'change-cell',
-      cell: (coin) => {
-        const isTrendingUp = coin.price_change_percentage_24h > 0;
-
-        return (
-          <span
-            className={cn('change-value', {
-              'text-green-600': isTrendingUp,
-              'text-red-500': !isTrendingUp,
-            })}
-          >
-            {isTrendingUp && '+'}
-            {formatPercentage(coin.price_change_percentage_24h)}
-          </span>
-        );
-      },
+      cell: (coin) => (
+        <PriceChangeDisplay value={coin.price_change_percentage_24h} />
+      ),
     },
     {
       header: 'Market Cap',
