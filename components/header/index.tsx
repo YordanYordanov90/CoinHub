@@ -8,6 +8,7 @@ import { Coins, Home, MenuIcon, Search, X, ChevronRight } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { navItems } from "@/constants"
+import SearchModal from "@/components/search-model"
 
 const iconByHref: Record<string, LucideIcon> = {
   "/": Home,
@@ -18,6 +19,7 @@ const iconByHref: Record<string, LucideIcon> = {
 const Header = () => {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement | null>(null)
   const mobilePanelRef = useRef<HTMLDivElement | null>(null)
 
@@ -125,33 +127,62 @@ const Header = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex md:items-center md:gap-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              icon={iconByHref[item.href]}
-            />
-          ))}
+          {navItems.map((item) =>
+            item.href === "/search" ? (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className={cn(
+                  "relative inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md",
+                  "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                )}
+                aria-label="Open search"
+              >
+                <Search className="size-4" aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            ) : (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={iconByHref[item.href]}
+              />
+            )
+          )}
         </nav>
 
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          ref={menuButtonRef}
-          className="inline-flex md:hidden size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-expanded={isOpen}
-          aria-controls="mobile-nav"
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-        >
-          {isOpen ? (
-            <X className="size-5" />
-          ) : (
-            <MenuIcon className="size-5" />
-          )}
-        </button>
+        {/* Mobile: search + menu */}
+        <div className="flex md:hidden items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Open search"
+          >
+            <Search className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            ref={menuButtonRef}
+            className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+          >
+            {isOpen ? (
+              <X className="size-5" />
+            ) : (
+              <MenuIcon className="size-5" />
+            )}
+          </button>
+        </div>
       </div>
+
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Mobile nav overlay */}
       <div
@@ -205,16 +236,39 @@ const Header = () => {
           </div>
 
           <div className="flex flex-col gap-1 p-3">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                icon={iconByHref[item.href]}
-                isMobile
-                onNavigate={() => setIsOpen(false)}
-              />
-            ))}
+            {navItems.map((item) =>
+              item.href === "/search" ? (
+                <button
+                  key={item.href}
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false)
+                    setSearchOpen(true)
+                  }}
+                  className={cn(
+                    "relative flex w-full items-center justify-between gap-2 py-3 px-4 text-base rounded-lg",
+                    "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  )}
+                  aria-label="Open search"
+                >
+                  <span className="inline-flex items-center gap-3">
+                    <Search className="size-5" aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </span>
+                  <ChevronRight className="size-5 text-muted-foreground" aria-hidden="true" />
+                </button>
+              ) : (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={iconByHref[item.href]}
+                  isMobile
+                  onNavigate={() => setIsOpen(false)}
+                />
+              )
+            )}
           </div>
         </div>
       </div>

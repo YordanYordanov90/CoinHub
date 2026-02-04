@@ -96,6 +96,16 @@ interface SearchCoin {
   };
 }
 
+/** CoinGecko /search API response item (no price/24h). */
+interface SearchResultCoin {
+  id: string;
+  name: string;
+  symbol: string;
+  market_cap_rank: number | null;
+  thumb: string;
+  large: string;
+}
+
 // Chart Section Props (used in ChartSection.tsx)
 interface ChartSectionProps {
   coinData: {
