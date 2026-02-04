@@ -8,10 +8,13 @@ const API_KEY = process.env.COINGECKO_API_KEY;
 if (!BASE_URL) throw new Error('Could not get base url');
 if (!API_KEY) throw new Error('Could not get api key');
 
+/** Default cache (seconds). Higher = fewer requests, stays within free-tier rate limits. */
+const DEFAULT_REVALIDATE = 120;
+
 export async function fetcher<T>(
   endpoint: string,
   params?: QueryParams,
-  revalidate = 60,
+  revalidate = DEFAULT_REVALIDATE,
 ): Promise<T> {
   const url = qs.stringifyUrl(
     {
@@ -47,6 +50,9 @@ export async function fetcher<T>(
   return response.json();
 }
 
+/** Pool data changes rarely; cache 5 min to reduce rate-limit pressure. */
+const POOL_REVALIDATE = 300;
+
 export async function getPools(
   id: string,
   network?: string | null,
@@ -63,6 +69,8 @@ export async function getPools(
     try {
       const poolData = await fetcher<{ data: PoolData[] }>(
         `/onchain/networks/${network}/tokens/${contractAddress}/pools`,
+        undefined,
+        POOL_REVALIDATE,
       );
 
       return poolData.data?.[0] ?? fallback;
@@ -73,7 +81,11 @@ export async function getPools(
   }
 
   try {
-    const poolData = await fetcher<{ data: PoolData[] }>('/onchain/search/pools', { query: id });
+    const poolData = await fetcher<{ data: PoolData[] }>(
+      '/onchain/search/pools',
+      { query: id },
+      POOL_REVALIDATE,
+    );
 
     return poolData.data?.[0] ?? fallback;
   } catch {

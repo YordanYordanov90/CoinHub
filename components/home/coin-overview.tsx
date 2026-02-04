@@ -11,8 +11,9 @@ const CoinOverview = async () => {
   let coinOHLCData: OHLCData[] | null = null;
 
   try {
+    /** Cache 5 min for both; home hero doesn't need real-time, keeps free-tier within limits. */
     [coin, coinOHLCData] = await Promise.all([
-      fetcher<CoinDetailsData>(`/coins/${COIN_ID}`),
+      fetcher<CoinDetailsData>(`/coins/${COIN_ID}`, undefined, 300),
       fetcher<OHLCData[]>(
         `/coins/${COIN_ID}/ohlc`,
         { vs_currency: 'usd', days: '1' },

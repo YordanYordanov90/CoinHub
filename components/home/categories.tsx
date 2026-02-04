@@ -8,7 +8,8 @@ import DataTable from '../data-table';
 
 const Categories = async () => {
   try {
-    const categories = await fetcher<Category[]>('/coins/categories');
+    /** Cache 5 min; categories change infrequently, reduces rate-limit pressure. */
+    const categories = await fetcher<Category[]>('/coins/categories', undefined, 300);
 
     const columns: DataTableColumn<Category>[] = [
       { header: 'Category', cellClassName: 'font-medium', cell: (category) => category.name },
