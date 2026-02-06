@@ -20,6 +20,13 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment variables
+
+Create a `.env` (or `.env.local`) with:
+
+- `COINGECKO_BASE_URL` and `COINGECKO_API_KEY` — for prices, search, and OHLC (see CoinGecko API docs).
+- `OPENAI_API_KEY` — optional; required for the **Predictions** page (`/predictions`) to show AI-generated market outlooks.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

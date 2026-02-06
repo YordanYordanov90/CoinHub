@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { fetcher } from '@/lib/coingecko.actions';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency} from '@/lib/utils';
 import CandlestickChart from '@/components/candlestick-chart';
 import { PriceChangeDisplay } from '@/components/ui/price-change';
 

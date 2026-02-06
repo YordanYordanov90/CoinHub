@@ -10,6 +10,7 @@ export const navItems = [
   { label: 'Home', href: '/' },
   { label: 'Search', href: '/search' },
   { label: 'All Coins', href: '/coins' },
+  { label: 'Predictions', href: '/predictions' },
 ] as const;
 
 const CHART_COLORS = {

@@ -1,8 +1,10 @@
 import Categories from '@/components/home/categories'
 import CoinOverview from '@/components/home/coin-overview'
+import CryptopanicWidget from '@/components/home/cryptopanic-widget'
 import {
   CategoriesFallback,
   CoinOverviewFallback,
+  CryptopanicWidgetFallback,
   TrendingCoinsFallback,
 } from '@/components/home/fallback'
 import TrendingCoins from '@/components/home/trending-coins'
@@ -23,6 +25,11 @@ const HomePage = async () => {
           </Suspense>
         </section>
       </div>
+      <section className="container mx-auto min-w-0 max-w-full px-4 sm:px-6 py-8">
+        <Suspense fallback={<CryptopanicWidgetFallback />}>
+          <CryptopanicWidget />
+        </Suspense>
+      </section>
       <section className="container mx-auto min-w-0 max-w-full px-4 sm:px-6 py-8">
         <Suspense fallback={<CategoriesFallback />}>
           <Categories />

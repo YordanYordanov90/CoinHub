@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
-import { Coins, Home, MenuIcon, Search, X, ChevronRight } from "lucide-react"
+import { Coins, Home, MenuIcon, Search, X, ChevronRight, TrendingUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { navItems } from "@/constants"
@@ -14,6 +14,7 @@ const iconByHref: Record<string, LucideIcon> = {
   "/": Home,
   "/search": Search,
   "/coins": Coins,
+  "/predictions": TrendingUp,
 }
 
 const Header = () => {

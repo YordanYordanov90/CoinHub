@@ -65,6 +65,16 @@ export const TrendingCoinsFallback = () => {
   );
 };
 
+export const CryptopanicWidgetFallback = () => (
+  <div className="flex flex-col min-h-0">
+    <div className="flex items-center justify-between shrink-0 mb-3">
+      <div className="skeleton h-6 w-32 rounded" />
+      <div className="skeleton h-4 w-16 rounded" />
+    </div>
+    <div className="skeleton rounded-lg min-h-[350px] w-full" />
+  </div>
+);
+
 export const CategoriesFallback = () => {
   const columns = [
     {
