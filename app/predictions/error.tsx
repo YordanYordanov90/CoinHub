@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { AlertCircle } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
-export default function Error({
+export default function PredictionsError({
   error,
   reset,
 }: {
@@ -12,31 +12,21 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('App error boundary:', error);
-    // In production you can send to your analytics service here
-    // if (process.env.NODE_ENV === 'production') { reportError(error); }
+    console.error('Predictions page error boundary:', error);
   }, [error]);
-
-  const isDev = process.env.NODE_ENV === 'development';
-  const safeMessage = isDev && error.message ? error.message.slice(0, 200) : undefined;
 
   return (
     <main className="container mx-auto px-4 sm:px-6 py-8">
       <div className="max-w-md mx-auto text-center space-y-6">
         <div className="flex justify-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive" aria-hidden>
-            <AlertCircle className="h-6 w-6" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-chart-1/20 text-chart-1" aria-hidden>
+            <TrendingUp className="h-6 w-6" />
           </span>
         </div>
-        <h1 className="text-xl font-semibold text-foreground">Something went wrong</h1>
+        <h1 className="text-xl font-semibold text-foreground">Failed to load predictions</h1>
         <p className="text-muted-foreground text-sm">
-          An unexpected error occurred. You can try again or return home.
+          We couldn&apos;t load the AI prediction markets. Please try again in a moment.
         </p>
-        {safeMessage && (
-          <p className="text-left text-xs text-muted-foreground font-mono bg-muted/50 rounded-md p-3 wrap-break-word">
-            {safeMessage}
-          </p>
-        )}
         <div className="flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
