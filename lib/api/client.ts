@@ -15,13 +15,17 @@ if (!_baseUrl || !_apiKey) {
   throw new Error('CoinGeckoClient: COINGECKO_BASE_URL and COINGECKO_API_KEY must be set');
 }
 
+/** Narrowed so TypeScript knows they are defined after the guard. */
+const BASE_URL: string = _baseUrl;
+const API_KEY: string = _apiKey;
+
 const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1_000;
 
 /** Demo API uses api.coingecko.com and query param; Pro uses pro-api and header. */
 const IS_DEMO =
-  _baseUrl.includes('api.coingecko.com') && !_baseUrl.includes('pro-api');
+  BASE_URL.includes('api.coingecko.com') && !BASE_URL.includes('pro-api');
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -150,8 +154,8 @@ export class CoinGeckoClient {
   private readonly apiKey: string;
 
   constructor() {
-    this.baseURL = _baseUrl.replace(/\/+$/, '');
-    this.apiKey = _apiKey;
+    this.baseURL = BASE_URL.replace(/\/+$/, '');
+    this.apiKey = API_KEY;
   }
 
   /**
