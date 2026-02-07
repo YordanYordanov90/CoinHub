@@ -83,10 +83,10 @@ export default function CryptopanicWidget({
           title="CryptoPanic latest news"
           className="w-full border-0 block"
           style={{ height: heightValue }}
-          allowTransparency={true}
-          
+          allowTransparency
+
         />
-      </div>
+    </div>
     </div>
   );
 }
