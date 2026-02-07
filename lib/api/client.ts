@@ -85,6 +85,16 @@ export interface TrendingResponse {
   coins: TrendingCoinEntry[];
 }
 
+/** CoinGecko ticker shape; matches global Ticker in types.d.ts for compatibility. */
+export interface CoinGeckoTicker {
+  market: { name: string };
+  base: string;
+  target: string;
+  converted_last: { usd: number };
+  timestamp: string;
+  trade_url: string;
+}
+
 export interface CoinDetailsData {
   id: string;
   name: string;
@@ -106,7 +116,7 @@ export interface CoinDetailsData {
   market_cap_rank: number;
   description: { en: string };
   links: { homepage: string[]; blockchain_site: string[]; subreddit_url: string };
-  tickers: unknown[];
+  tickers: CoinGeckoTicker[];
 }
 
 export interface CategoryData {

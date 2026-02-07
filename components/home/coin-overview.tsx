@@ -1,4 +1,5 @@
-import { fetcher } from '@/lib/coingecko.actions';
+import { getCoinDetails } from '@/lib/api/cache';
+import { coinGeckoClient } from '@/lib/api/client';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import CandlestickChart from '../candlestick-chart';
@@ -11,14 +12,10 @@ const CoinOverview = async () => {
   let coinOHLCData: OHLCData[] | null = null;
 
   try {
-    /** Cache 5 min for both; home hero doesn't need real-time, keeps free-tier within limits. */
+    /** Cached 5 min via lib/api/cache; home hero doesn't need real-time. */
     [coin, coinOHLCData] = await Promise.all([
-      fetcher<CoinDetailsData>(`/coins/${COIN_ID}`, undefined, 300),
-      fetcher<OHLCData[]>(
-        `/coins/${COIN_ID}/ohlc`,
-        { vs_currency: 'usd', days: '1' },
-        300,
-      ),
+      getCoinDetails(COIN_ID),
+      coinGeckoClient.getOHLC(COIN_ID, 1).catch(() => null),
     ]);
   } catch (error) {
     console.error('Error fetching coin overview:', error);

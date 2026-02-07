@@ -1,4 +1,4 @@
-import { fetcher } from '@/lib/coingecko.actions';
+import { getTrendingCoins } from '@/lib/api/cache';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
@@ -10,7 +10,7 @@ const TrendingCoins = async () => {
   let trendingCoins;
 
   try {
-    trendingCoins = await fetcher<{ coins: TrendingCoin[] }>('/search/trending', undefined, 300);
+    trendingCoins = await getTrendingCoins();
   } catch (error) {
     console.error('Error fetching trending coins:', error);
     return <TrendingCoinsFallback />;

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { fetcher } from '@/lib/coingecko.actions';
+import { getCoinDetails } from '@/lib/api/cache';
+import { coinGeckoClient } from '@/lib/api/client';
 import { formatCurrency} from '@/lib/utils';
 import CandlestickChart from '@/components/candlestick-chart';
 import { PriceChangeDisplay } from '@/components/ui/price-change';
@@ -20,16 +21,10 @@ const CoinPage = async ({ params }: NextPageProps) => {
   let coin: CoinDetailsData | null = null;
   let coinOHLCData: OHLCData[] | null = null;
 
-  const coinEndpoint = `/coins/${id}`;
-
   try {
     [coin, coinOHLCData] = await Promise.all([
-      fetcher<CoinDetailsData>(coinEndpoint, undefined, 300),
-      fetcher<OHLCData[]>(
-        `${coinEndpoint}/ohlc`,
-        { vs_currency: 'usd', days: '1' },
-        300,
-      ).catch(() => null),
+      getCoinDetails(id),
+      coinGeckoClient.getOHLC(id, 1).catch(() => null),
     ]);
   } catch (err) {
     // Server log: 400/404 = coin not available or not supported on your API plan for GET /coins/{id}. 404 often means this coin isn’t available on the free/Demo tier for GET /coins/{id}.

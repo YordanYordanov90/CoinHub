@@ -1,4 +1,4 @@
-import { fetcher } from '@/lib/coingecko.actions';
+import { getCategories } from '@/lib/api/cache';
 
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
@@ -9,7 +9,7 @@ import { PriceChangeDisplay } from '@/components/ui/price-change';
 const Categories = async () => {
   try {
     /** Cache 5 min; categories change infrequently, reduces rate-limit pressure. */
-    const categories = await fetcher<Category[]>('/coins/categories', undefined, 300);
+    const categories = await getCategories();
 
     const columns: DataTableColumn<Category>[] = [
       { header: 'Category', cellClassName: 'font-medium', cell: (category) => category.name },

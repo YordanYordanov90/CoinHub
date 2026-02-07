@@ -1,4 +1,4 @@
-import { fetcher } from '@/lib/coingecko.actions';
+import { getMarkets } from '@/lib/api/cache';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -6,7 +6,6 @@ import { formatCurrency } from '@/lib/utils';
 import DataTable from '@/components/data-table';
 import CoinsPagination from '@/components/coins-pagination';
 import { PriceChangeDisplay } from '@/components/ui/price-change';
-
 
 /** Free/Demo tier only accepts page=1 for /coins/markets. Fetch once, paginate in-app. */
 const COINS_PAGE_SIZE = 250;
@@ -17,19 +16,15 @@ const Coins = async ({ searchParams }: NextPageProps) => {
 
   const currentPage = Math.max(1, Number(page) || 1);
 
-  /** Always request page=1; Demo API returns 400 for page > 1. Cache 3 min. */
-  const allCoins = await fetcher<CoinMarketData[]>(
-    '/coins/markets',
-    {
-      vs_currency: 'usd',
-      order: 'market_cap_desc',
-      per_page: COINS_PAGE_SIZE,
-      page: 1,
-      sparkline: 'false',
-      price_change_percentage: '24h',
-    },
-    180,
-  );
+  /** Always request page=1; Demo API returns 400 for page > 1. Cached 5 min via lib/api/cache. */
+  const allCoins = await getMarkets({
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    per_page: COINS_PAGE_SIZE,
+    page: 1,
+    sparkline: false,
+    price_change_percentage: '24h',
+  });
 
   const totalPages = Math.max(1, Math.ceil(allCoins.length / PER_PAGE));
   const pageIndex = Math.min(currentPage - 1, totalPages - 1);

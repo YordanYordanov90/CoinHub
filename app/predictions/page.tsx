@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
-import { fetcher } from '@/lib/coingecko.actions';
+import { getMarkets } from '@/lib/api/cache';
 import { buildMarketsFromCoins, getPredictionsForMarkets } from '@/lib/predictions/ai-predictions';
 import PredictionMarketCard from '@/components/predictions/market-card';
 
 const COINS_PER_PAGE = 15;
-const COINGECKO_REVALIDATE = 300;
 /** Cache full page data (CoinGecko + OpenAI) so repeat visits are instant. */
 const PREDICTIONS_CACHE_SECONDS = 600;
 
@@ -27,18 +26,14 @@ function RateLimitMessage() {
 }
 
 async function fetchPredictionsData(): Promise<Awaited<ReturnType<typeof getPredictionsForMarkets>>> {
-  const coins = await fetcher<CoinMarketData[]>(
-    '/coins/markets',
-    {
-      vs_currency: 'usd',
-      order: 'market_cap_desc',
-      per_page: COINS_PER_PAGE,
-      page: 1,
-      sparkline: 'false',
-      price_change_percentage: '24h',
-    },
-    COINGECKO_REVALIDATE,
-  );
+  const coins = await getMarkets({
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    per_page: COINS_PER_PAGE,
+    page: 1,
+    sparkline: false,
+    price_change_percentage: '24h',
+  });
   const marketsWithoutPredictions = buildMarketsFromCoins(coins);
   return getPredictionsForMarkets(marketsWithoutPredictions);
 }

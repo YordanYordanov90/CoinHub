@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { fetchSearch } from '@/lib/coingecko.server';
+import { coinGeckoClient } from '@/lib/api/client';
 
 /** GET /api/search?q=... — returns { coins: SearchResultCoin[], error?: string }. Used by SearchModal with SWR. */
 export async function GET(request: NextRequest) {
@@ -9,10 +9,10 @@ export async function GET(request: NextRequest) {
     return Response.json({ coins: [] });
   }
   try {
-    const result = await fetchSearch(q);
+    const result = await coinGeckoClient.searchCoins(q);
     return Response.json(result);
   } catch (error) {
-    console.error('Search API error:', error);
+    console.error('[api/search]', error);
     return Response.json(
       { coins: [], error: error instanceof Error ? error.message : 'Search failed' },
       { status: 200 },

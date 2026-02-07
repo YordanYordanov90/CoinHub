@@ -1,7 +1,5 @@
 import { NextRequest } from 'next/server';
-import { fetcher } from '@/lib/coingecko.actions';
-
-const OHLC_REVALIDATE = 300;
+import { coinGeckoClient } from '@/lib/api/client';
 
 const VALID_DAYS = new Set(['1', '7', '30', '90']);
 
@@ -16,18 +14,21 @@ export async function GET(
 ) {
   const { id } = await params;
   if (!isValidCoinId(id)) {
-    return new Response(null, { status: 404 });
+    return Response.json({ error: 'Invalid coin id' }, { status: 400 });
   }
 
   const { searchParams } = new URL(_request.url);
   const daysParam = searchParams.get('days') ?? '1';
-  const days = VALID_DAYS.has(daysParam) ? daysParam : '1';
+  const daysNum = VALID_DAYS.has(daysParam) ? Number(daysParam) : 1;
 
-  const data = await fetcher<OHLCData[]>(
-    `/coins/${id}/ohlc`,
-    { vs_currency: 'usd', days },
-    OHLC_REVALIDATE,
-  );
-
-  return Response.json(data);
+  try {
+    const data = await coinGeckoClient.getOHLC(id, daysNum);
+    return Response.json(data);
+  } catch (error) {
+    console.error('[api/coins/[id]/ohlc]', id, error);
+    return Response.json(
+      { error: error instanceof Error ? error.message : 'Failed to fetch OHLC' },
+      { status: 500 },
+    );
+  }
 }
