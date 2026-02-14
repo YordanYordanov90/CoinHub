@@ -7,7 +7,7 @@ import type { LucideIcon } from "lucide-react"
 import { Coins, Home, MenuIcon, Search, X, ChevronRight, TrendingUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
-import { navItems } from "@/constants"
+import { navItems } from "@/lib/utils/constants"
 import SearchModal from "@/components/search-model"
 
 const iconByHref: Record<string, LucideIcon> = {

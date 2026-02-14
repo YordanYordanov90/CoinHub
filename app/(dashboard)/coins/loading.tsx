@@ -14,7 +14,7 @@ export default function CoinsLoading() {
   return (
     <main className="container mx-auto px-4 sm:px-6 py-8" aria-label="Loading coins">
       <div className="content">
-        <Skeleton className="mb-6 h-8 w-32" aria-hidden />
+        <h4 className="mb-6">All Coins</h4>
         <Table className="coins-table">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/50">

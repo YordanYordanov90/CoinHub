@@ -3,12 +3,12 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import Image from "next/image";
-import useSWR from "swr";
 import { Search, X, Clock, TrendingUp, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { SearchResult } from '@/types/api';
+import { useSearchCoins } from '@/lib/hooks/useSearchCoins';
+import CoinImage from '@/components/ui/CoinImage';
 
-const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
 const RECENT_STORAGE_KEY = "coinhub-recent-search-coins";
 const RECENT_MAX = 5;
@@ -18,20 +18,7 @@ interface SearchModalProps {
   onClose: () => void;
 }
 
-interface SearchApiResponse {
-  coins: SearchResultCoin[];
-  error?: string;
-}
-
-/** Debounces value; only updates after delay ms of no changes. */
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
+type SearchResultCoin = SearchResult['coins'][number];
 
 function getRecentCoins(): SearchResultCoin[] {
   if (typeof window === "undefined") return [];
@@ -55,29 +42,18 @@ function addRecentCoin(coin: SearchResultCoin) {
   }
 }
 
-async function searchFetcher(url: string): Promise<SearchApiResponse> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || res.statusText);
-  }
-  return res.json();
-}
-
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const debouncedQuery = useDebouncedValue(query.trim(), DEBOUNCE_MS);
-  const shouldFetch = isOpen && debouncedQuery.length >= MIN_QUERY_LENGTH;
-  const swrKey = shouldFetch
-    ? `/api/search?q=${encodeURIComponent(debouncedQuery)}`
-    : null;
-  const { data, error, isLoading } = useSWR<SearchApiResponse>(swrKey, searchFetcher);
+  const trimmedQuery = query.trim();
+  const shouldFetch = isOpen && trimmedQuery.length >= MIN_QUERY_LENGTH;
+  const { data, error, isLoading } = useSearchCoins(query, isOpen);
 
   const coins = useMemo(() => data?.coins ?? [], [data?.coins]);
   const apiError = data?.error;
+  const queryErrorMessage = error instanceof Error ? error.message : undefined;
   const showHint = !shouldFetch && !isLoading;
   const showResults = shouldFetch && !error && !apiError;
   const list = useMemo(
@@ -138,7 +114,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   useEffect(() => {
     const id = setTimeout(() => setSelectedIndex(0), 0);
     return () => clearTimeout(id);
-  }, [debouncedQuery, list.length]);
+  }, [trimmedQuery, list.length]);
 
   if (!isOpen) return null;
 
@@ -147,10 +123,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       <button
         type="button"
         onClick={handleClose}
-        className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-xl transition-opacity supports-[backdrop-filter]:bg-black/30"
+        className="fixed inset-0 z-100 bg-black/40 backdrop-blur-xl transition-opacity supports-backdrop-filter:bg-black/30"
         aria-label="Close search"
       />
-      <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] pointer-events-none">
+      <div className="fixed inset-0 z-100 flex items-start justify-center pt-[15vh] pointer-events-none">
         <div
           className="w-full max-w-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 pointer-events-auto"
           role="dialog"
@@ -237,7 +213,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 )}
                 {(error || apiError) && (
                   <p className="py-6 text-center text-sm text-destructive">
-                    {apiError ?? error?.message ?? "Search failed."}
+                    {apiError ?? queryErrorMessage ?? "Search failed."}
                   </p>
                 )}
                 {showResults && coins.length === 0 && (
@@ -260,7 +236,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          <Image
+                          <CoinImage
                             src={coin.thumb}
                             alt=""
                             width={40}

@@ -1,6 +1,7 @@
 'use server';
 
 import qs from 'query-string';
+import type { CoinGeckoErrorBody } from '@/types/api';
 
 const _baseUrl = process.env.COINGECKO_BASE_URL;
 const _apiKey = process.env.COINGECKO_API_KEY;
@@ -13,6 +14,15 @@ const DEFAULT_REVALIDATE = 120;
 
 const FETCH_TIMEOUT_MS = 10_000;
 const RETRY_DELAY_MS = 1_500;
+
+type QueryParams = Record<string, string | number | boolean | undefined>;
+
+interface PoolData {
+  id: string;
+  address: string;
+  name: string;
+  network: string;
+}
 
 /** Validates endpoint to prevent path traversal or absolute URLs. */
 function validateEndpoint(endpoint: string): string {

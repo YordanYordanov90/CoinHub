@@ -7,6 +7,7 @@
  */
 
 import qs from 'query-string';
+import type { SearchResultCoin } from '@/types/api';
 
 const _baseUrl = process.env.COINGECKO_BASE_URL;
 const _apiKey = process.env.COINGECKO_API_KEY;
@@ -101,6 +102,7 @@ export async function fetchSearch(query: string): Promise<SearchResult> {
     coins: coins.map((c) => ({
       id: c.id,
       name: c.name,
+      api_symbol: c.api_symbol,
       symbol: c.symbol,
       market_cap_rank: c.market_cap_rank ?? null,
       thumb: c.thumb,

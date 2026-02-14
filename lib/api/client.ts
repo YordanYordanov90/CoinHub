@@ -5,6 +5,30 @@
  */
 
 import qs from 'query-string';
+import { z } from 'zod';
+import {
+  APIError,
+  NetworkError,
+  RateLimitError,
+  ValidationError,
+} from '@/lib/errors';
+
+import {
+  CategorySchema,
+  CoinDetailsSchema,
+  CoinGeckoErrorBodySchema,
+  CoinMarketSchema,
+  OHLCDataSchema,
+  SearchResponseSchema,
+  TrendingResponseSchema,
+  type Category,
+  type CoinDetails,
+  type CoinMarket,
+  type OHLCData,
+  type SearchResponse,
+  type SearchResult,
+  type TrendingResponse,
+} from '@/types/api';
 
 // --- Environment and config ---
 
@@ -29,134 +53,6 @@ const IS_DEMO =
 
 const isDev = process.env.NODE_ENV === 'development';
 
-// --- Response types (align with CoinGecko API and existing types.d.ts) ---
-
-export interface CoinGeckoErrorBody {
-  error?: string;
-  message?: string;
-}
-
-export interface CoinMarketData {
-  id: string;
-  symbol: string;
-  name: string;
-  image: string;
-  current_price: number;
-  market_cap: number;
-  market_cap_rank: number;
-  fully_diluted_valuation: number;
-  total_volume: number;
-  high_24h: number;
-  low_24h: number;
-  price_change_24h: number;
-  price_change_percentage_24h: number;
-  market_cap_change_24h: number;
-  market_cap_change_percentage_24h: number;
-  circulating_supply: number;
-  total_supply: number | null;
-  max_supply: number | null;
-  ath: number;
-  ath_change_percentage: number;
-  ath_date: string;
-  atl: number;
-  atl_change_percentage: number;
-  atl_date: string;
-  last_updated: string;
-}
-
-export interface TrendingCoinItem {
-  id: string;
-  name: string;
-  symbol: string;
-  market_cap_rank: number;
-  thumb: string;
-  large: string;
-  data: {
-    price: number;
-    price_change_percentage_24h: { usd: number };
-  };
-}
-
-export interface TrendingCoinEntry {
-  item: TrendingCoinItem;
-}
-
-export interface TrendingResponse {
-  coins: TrendingCoinEntry[];
-}
-
-/** CoinGecko ticker shape; matches global Ticker in types.d.ts for compatibility. */
-export interface CoinGeckoTicker {
-  market: { name: string };
-  base: string;
-  target: string;
-  converted_last: { usd: number };
-  timestamp: string;
-  trade_url: string;
-}
-
-export interface CoinDetailsData {
-  id: string;
-  name: string;
-  symbol: string;
-  asset_platform_id?: string | null;
-  detail_platforms?: Record<
-    string,
-    { geckoterminal_url: string; contract_address: string }
-  >;
-  image: { large: string; small: string };
-  market_data: {
-    current_price: { usd: number; [key: string]: number };
-    price_change_24h_in_currency: { usd: number };
-    price_change_percentage_24h_in_currency: { usd: number };
-    price_change_percentage_30d_in_currency: { usd: number };
-    market_cap: { usd: number };
-    total_volume: { usd: number };
-  };
-  market_cap_rank: number;
-  description: { en: string };
-  links: { homepage: string[]; blockchain_site: string[]; subreddit_url: string };
-  tickers: CoinGeckoTicker[];
-}
-
-export interface CategoryData {
-  category_id: string;
-  name: string;
-  top_3_coins: string[];
-  market_cap_change_24h: number;
-  market_cap: number;
-  volume_24h: number;
-}
-
-export interface SearchResultCoin {
-  id: string;
-  name: string;
-  symbol: string;
-  market_cap_rank: number | null;
-  thumb: string;
-  large: string;
-}
-
-export interface SearchResponse {
-  coins: Array<{
-    id: string;
-    name: string;
-    api_symbol: string;
-    symbol: string;
-    market_cap_rank: number | null;
-    thumb: string;
-    large: string;
-  }>;
-}
-
-export interface SearchResult {
-  coins: SearchResultCoin[];
-  error?: string;
-}
-
-/** [timestamp_ms, open, high, low, close] */
-export type OHLCData = [number, number, number, number, number];
-
 // --- Client class ---
 
 export class CoinGeckoClient {
@@ -180,10 +76,12 @@ export class CoinGeckoClient {
 
   /**
    * Private request helper: timeout, retries with exponential backoff, typed response.
+   * If a Zod schema is provided, the JSON is validated before returning.
    */
   private async request<T>(
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
+    schema?: z.ZodType<T>,
   ): Promise<T> {
     const normalized = endpoint.trim().replace(/^\/+/, '');
     if (!normalized || normalized.startsWith('http') || normalized.includes('..')) {
@@ -227,30 +125,88 @@ export class CoinGeckoClient {
           const text = await response.text();
           let message = response.statusText;
           try {
-            const body = JSON.parse(text) as CoinGeckoErrorBody;
+            const body = CoinGeckoErrorBodySchema.parse(
+              JSON.parse(text),
+            );
             message = body.error ?? body.message ?? message;
           } catch {
             if (text) message = text.slice(0, 200);
           }
 
           if (response.status === 429) {
-            throw new Error(`CoinGecko rate limit (429): ${message}`);
+            throw new RateLimitError(`CoinGecko rate limit: ${message}`);
           }
           if (response.status === 401) {
-            throw new Error(`CoinGecko invalid API key (401): ${message}`);
+            throw new APIError(
+              `CoinGecko invalid API key: ${message}`,
+              401,
+              true,
+              'UNAUTHORIZED',
+            );
           }
           if (response.status === 404) {
-            throw new Error(`CoinGecko not found (404): ${message}`);
+            throw new APIError(`CoinGecko not found: ${message}`, 404, true, 'NOT_FOUND');
           }
-          throw new Error(`CoinGecko API error ${response.status}: ${message}`);
+          if (response.status >= 500) {
+            throw new APIError(
+              `CoinGecko upstream server error ${response.status}: ${message}`,
+              503,
+              true,
+              'UPSTREAM_SERVER_ERROR',
+            );
+          }
+          throw new APIError(
+            `CoinGecko API error ${response.status}: ${message}`,
+            response.status,
+            true,
+            'UPSTREAM_API_ERROR',
+          );
         }
 
-        return (await response.json()) as T;
+        const json = (await response.json()) as unknown;
+
+        if (schema) {
+          try {
+            return schema.parse(json);
+          } catch (validationError) {
+            if (isDev) {
+              
+              console.error(
+                '[CoinGecko] Response validation failed:',
+                validationError,
+              );
+            }
+            if (validationError instanceof z.ZodError) {
+              throw new ValidationError(
+                'CoinGecko response validation failed',
+                validationError.issues,
+              );
+            }
+            throw validationError;
+          }
+        }
+
+        return json as T;
       } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
+        if (err instanceof APIError) {
+          lastError = err;
+        } else if (err instanceof z.ZodError) {
+          lastError = new ValidationError(
+            'CoinGecko response validation failed',
+            err.issues,
+          );
+        } else if (err instanceof Error && err.name === 'AbortError') {
+          lastError = new NetworkError('CoinGecko request timeout');
+        } else {
+          lastError = err instanceof Error ? err : new Error(String(err));
+        }
         const isRetryable =
-          lastError.name === 'AbortError' ||
-          (lastError.message.includes('500') || lastError.message.includes('502') || lastError.message.includes('503'));
+          lastError instanceof NetworkError ||
+          (lastError instanceof APIError &&
+            (lastError.code === 'UPSTREAM_SERVER_ERROR' || lastError.code === 'NETWORK_ERROR')) ||
+          (lastError.message.includes('500') ||
+            lastError.message.includes('502') ||
+            lastError.message.includes('503'));
         if (attempt < MAX_RETRIES && isRetryable) {
           await new Promise((r) => setTimeout(r, delayMs));
           delayMs *= 2;
@@ -284,31 +240,47 @@ export class CoinGeckoClient {
     order?: string;
     sparkline?: boolean;
     price_change_percentage?: string;
-  }): Promise<CoinMarketData[]> {
-    return this.request<CoinMarketData[]>('/coins/markets', {
-      vs_currency: params?.vs_currency ?? 'usd',
-      order: params?.order ?? 'market_cap_desc',
-      per_page: params?.per_page ?? 250,
-      page: params?.page ?? 1,
-      sparkline: params?.sparkline ?? false,
-      price_change_percentage: params?.price_change_percentage ?? '24h',
-    });
+  }): Promise<CoinMarket[]> {
+    return this.request<CoinMarket[]>(
+      '/coins/markets',
+      {
+        vs_currency: params?.vs_currency ?? 'usd',
+        order: params?.order ?? 'market_cap_desc',
+        per_page: params?.per_page ?? 250,
+        page: params?.page ?? 1,
+        sparkline: params?.sparkline ?? false,
+        price_change_percentage: params?.price_change_percentage ?? '24h',
+      },
+      CoinMarketSchema.array(),
+    );
   }
 
   getTrendingCoins(): Promise<TrendingResponse> {
-    return this.request<TrendingResponse>('/search/trending');
+    return this.request<TrendingResponse>(
+      '/search/trending',
+      undefined,
+      TrendingResponseSchema,
+    );
   }
 
-  getCoinDetails(id: string): Promise<CoinDetailsData> {
+  getCoinDetails(id: string): Promise<CoinDetails> {
     const safeId = id.trim();
     if (!/^[a-z0-9_-]{1,50}$/i.test(safeId)) {
       throw new Error(`Invalid coin id: ${id.slice(0, 50)}`);
     }
-    return this.request<CoinDetailsData>(`/coins/${encodeURIComponent(safeId)}`);
+    return this.request<CoinDetails>(
+      `/coins/${encodeURIComponent(safeId)}`,
+      undefined,
+      CoinDetailsSchema,
+    );
   }
 
-  getCategories(): Promise<CategoryData[]> {
-    return this.request<CategoryData[]>('/coins/categories');
+  getCategories(): Promise<Category[]> {
+    return this.request<Category[]>(
+      '/coins/categories',
+      undefined,
+      CategorySchema.array(),
+    );
   }
 
   /**
@@ -320,9 +292,13 @@ export class CoinGeckoClient {
       return { coins: [] };
     }
     try {
-      const body = await this.request<SearchResponse>('/search', { query: trimmed });
+      const body = await this.request<SearchResponse>(
+        '/search',
+        { query: trimmed },
+        SearchResponseSchema,
+      );
       const coins = body.coins ?? [];
-      return {
+      const result: SearchResult = {
         coins: coins.map((c) => ({
           id: c.id,
           name: c.name,
@@ -332,6 +308,7 @@ export class CoinGeckoClient {
           large: c.large,
         })),
       };
+      return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes('429')) {
@@ -350,10 +327,14 @@ export class CoinGeckoClient {
       throw new Error(`Invalid coin id: ${id.slice(0, 50)}`);
     }
     const validDays = [1, 7, 14, 30].includes(days) ? days : 1;
-    return this.request<OHLCData[]>(`/coins/${encodeURIComponent(safeId)}/ohlc`, {
-      vs_currency: 'usd',
-      days: validDays,
-    });
+    return this.request<OHLCData[]>(
+      `/coins/${encodeURIComponent(safeId)}/ohlc`,
+      {
+        vs_currency: 'usd',
+        days: validDays,
+      },
+      OHLCDataSchema.array(),
+    );
   }
 }
 

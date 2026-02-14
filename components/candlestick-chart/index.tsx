@@ -7,7 +7,7 @@ import {
   LIVE_INTERVAL_BUTTONS,
   PERIOD_BUTTONS,
   PERIOD_CONFIG,
-} from '@/constants';
+} from '@/lib/utils/constants';
 import {
   CandlestickSeries,
   createChart,
@@ -16,6 +16,22 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts';
 import { cn, convertOHLCData } from '@/lib/utils';
+import { OHLCData } from '@/types/api';
+import { LiveInterval, Period } from '@/types/models';
+
+
+
+interface CandlestickChartProps {
+  data?: OHLCData[];
+  liveOhlcv?: OHLCData | null;
+  coinId: string;
+  height?: number;
+  children?: React.ReactNode;
+  mode?: 'historical' | 'live';
+  initialPeriod?: Period;
+  liveInterval?: LiveInterval;
+  setLiveInterval?: (interval: LiveInterval) => void;
+}
 
 /** Converts OHLC data from CoinGecko format (ms timestamps) to chart format (seconds) */
 function toSecondsFormat(data: OHLCData[]): OHLCData[] {

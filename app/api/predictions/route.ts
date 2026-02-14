@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getMarkets } from '@/lib/api/cache';
 import { buildMarketsFromCoins, getPredictionsForMarkets } from '@/lib/predictions/ai-predictions';
+import { handleAPIError, logError } from '@/lib/errors/handler';
 
 const COINS_PER_PAGE = 15;
 
@@ -25,14 +26,29 @@ export async function POST(request: Request) {
       sparkline: false,
       price_change_percentage: '24h',
     });
-    const marketsWithoutPredictions = buildMarketsFromCoins(coins);
+    const marketsWithoutPredictions = buildMarketsFromCoins(
+      coins.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        image: c.image,
+        current_price: c.current_price,
+        market_cap: c.market_cap,
+        total_volume: c.total_volume,
+        price_change_percentage_24h: c.price_change_percentage_24h ?? 0,
+      })),
+    );
     const markets = await getPredictionsForMarkets(marketsWithoutPredictions);
     return NextResponse.json(markets);
   } catch (error) {
-    console.error('[api/predictions]', error);
+    const formatted = handleAPIError(error);
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      route: '/api/predictions',
+      method: 'POST',
+    });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch predictions' },
-      { status: 500 },
+      { error: formatted.message, code: formatted.code, timestamp: formatted.timestamp },
+      { status: formatted.statusCode },
     );
   }
 }
@@ -48,14 +64,29 @@ export async function GET() {
       sparkline: false,
       price_change_percentage: '24h',
     });
-    const marketsWithoutPredictions = buildMarketsFromCoins(coins);
+    const marketsWithoutPredictions = buildMarketsFromCoins(
+      coins.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        image: c.image,
+        current_price: c.current_price,
+        market_cap: c.market_cap,
+        total_volume: c.total_volume,
+        price_change_percentage_24h: c.price_change_percentage_24h ?? 0,
+      })),
+    );
     const markets = await getPredictionsForMarkets(marketsWithoutPredictions);
     return NextResponse.json(markets);
   } catch (error) {
-    console.error('[api/predictions]', error);
+    const formatted = handleAPIError(error);
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      route: '/api/predictions',
+      method: 'GET',
+    });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch predictions' },
-      { status: 500 },
+      { error: formatted.message, code: formatted.code, timestamp: formatted.timestamp },
+      { status: formatted.statusCode },
     );
   }
 }

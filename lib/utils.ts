@@ -1,3 +1,4 @@
+import { OHLCData } from '@/types/api';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

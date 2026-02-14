@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getMarkets } from '@/lib/api/cache';
+import { handleAPIError, logError } from '@/lib/errors/handler';
 
 /** GET /api/coins — markets list (cached). Query: vs_currency, per_page, page. */
 export async function GET(request: Request) {
@@ -19,10 +20,18 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[api/coins]', error);
+    const formatted = handleAPIError(error);
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      route: '/api/coins',
+      query: request.url,
+    });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch coins' },
-      { status: 500 },
+      {
+        error: formatted.message,
+        code: formatted.code,
+        timestamp: formatted.timestamp,
+      },
+      { status: formatted.statusCode },
     );
   }
 }

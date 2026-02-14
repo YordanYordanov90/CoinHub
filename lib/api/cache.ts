@@ -7,11 +7,11 @@
 import { unstable_cache } from 'next/cache';
 import { coinGeckoClient } from './client';
 import type {
-  CoinMarketData,
+  CoinMarket,
   TrendingResponse,
-  CoinDetailsData,
-  CategoryData,
-} from './client';
+  CoinDetails,
+  Category,
+} from '@/types/api';
 
 const REVALIDATE_SECONDS = 300;
 
@@ -24,7 +24,7 @@ async function fetchMarkets(params: {
   order: string;
   sparkline: boolean;
   price_change_percentage: string;
-}): Promise<CoinMarketData[]> {
+}): Promise<CoinMarket[]> {
   return coinGeckoClient.getMarkets(params);
 }
 
@@ -35,7 +35,7 @@ export async function getMarkets(params?: {
   order?: string;
   sparkline?: boolean;
   price_change_percentage?: string;
-}): Promise<CoinMarketData[]> {
+}): Promise<CoinMarket[]> {
   const vsCurrency = params?.vs_currency ?? 'usd';
   const perPage = params?.per_page ?? 250;
   const page = params?.page ?? 1;
@@ -84,11 +84,11 @@ export async function getTrendingCoins(): Promise<TrendingResponse> {
 
 // --- getCoinDetails ---
 
-async function fetchCoinDetails(id: string): Promise<CoinDetailsData> {
+async function fetchCoinDetails(id: string): Promise<CoinDetails> {
   return coinGeckoClient.getCoinDetails(id);
 }
 
-export async function getCoinDetails(id: string): Promise<CoinDetailsData | null> {
+export async function getCoinDetails(id: string): Promise<CoinDetails | null> {
   const safeId = id.trim();
   if (!/^[a-z0-9_-]{1,50}$/i.test(safeId)) {
     return null;
@@ -108,11 +108,11 @@ export async function getCoinDetails(id: string): Promise<CoinDetailsData | null
 
 // --- getCategories ---
 
-async function fetchCategories(): Promise<CategoryData[]> {
+async function fetchCategories(): Promise<Category[]> {
   return coinGeckoClient.getCategories();
 }
 
-export async function getCategories(): Promise<CategoryData[]> {
+export async function getCategories(): Promise<Category[]> {
   try {
     const cached = unstable_cache(fetchCategories, ['coins', 'categories'], {
       revalidate: REVALIDATE_SECONDS,

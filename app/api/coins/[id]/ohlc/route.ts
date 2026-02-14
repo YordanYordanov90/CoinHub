@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { coinGeckoClient } from '@/lib/api/client';
+import { APIError } from '@/lib/errors';
+import { handleAPIError, logError } from '@/lib/errors/handler';
 
 const VALID_DAYS = new Set(['1', '7', '30', '90']);
 
@@ -14,7 +16,11 @@ export async function GET(
 ) {
   const { id } = await params;
   if (!isValidCoinId(id)) {
-    return Response.json({ error: 'Invalid coin id' }, { status: 400 });
+    const formatted = handleAPIError(new APIError('Invalid coin id', 400, true, 'BAD_REQUEST'));
+    return Response.json(
+      { error: formatted.message, code: formatted.code, timestamp: formatted.timestamp },
+      { status: formatted.statusCode },
+    );
   }
 
   const { searchParams } = new URL(_request.url);
@@ -25,10 +31,15 @@ export async function GET(
     const data = await coinGeckoClient.getOHLC(id, daysNum);
     return Response.json(data);
   } catch (error) {
-    console.error('[api/coins/[id]/ohlc]', id, error);
+    const formatted = handleAPIError(error);
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      route: '/api/coins/[id]/ohlc',
+      coinId: id,
+      days: daysNum,
+    });
     return Response.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch OHLC' },
-      { status: 500 },
+      { error: formatted.message, code: formatted.code, timestamp: formatted.timestamp },
+      { status: formatted.statusCode },
     );
   }
 }

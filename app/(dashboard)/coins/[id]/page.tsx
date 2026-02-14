@@ -1,24 +1,78 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getCoinDetails } from '@/lib/api/cache';
 import { coinGeckoClient } from '@/lib/api/client';
-import { formatCurrency} from '@/lib/utils';
-import CandlestickChart from '@/components/candlestick-chart';
+import { formatCurrency } from '@/lib/utils';
+import CoinChart from '@/components/features/coins/CoinChart';
+import CoinImage from '@/components/ui/CoinImage';
 import { PriceChangeDisplay } from '@/components/ui/price-change';
-
+import type { CoinDetails, OHLCData } from '@/types/api';
+import {
+  buildFinancialQuoteJsonLd,
+  buildWebPageJsonLd,
+  toJsonLdScript,
+} from '@/lib/seo/jsonLd';
 
 /** CoinGecko coin ids: lowercase letters, digits, hyphens; length 1–50. */
 function isValidCoinId(id: string): boolean {
   return /^[a-z0-9_-]{1,50}$/i.test(id);
 }
 
-const CoinPage = async ({ params }: NextPageProps) => {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ [key: string]: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+
+  if (!isValidCoinId(id)) {
+    return {
+      title: 'Coin',
+      description: 'Cryptocurrency details, charts, and market data.',
+    };
+  }
+
+  const coin = await getCoinDetails(id);
+
+  if (!coin) {
+    return {
+      title: 'Coin not found',
+      description: 'The requested coin is unavailable on this API plan.',
+    };
+  }
+
+  const symbol = coin.symbol.toUpperCase();
+  const priceUsd = coin.market_data.current_price?.usd ?? 0;
+  const marketCapUsd = coin.market_data.market_cap?.usd ?? 0;
+
+  return {
+    title: `${coin.name} (${symbol}) Price, Chart & Market Data`,
+    description: `Live ${coin.name} price: $${priceUsd.toLocaleString()}. Market cap: $${marketCapUsd.toLocaleString()}. Track chart and market data on CoinHub.`,
+    openGraph: {
+      title: `${coin.name} Price - CoinHub`,
+      description: `Track ${coin.name} price, chart, market cap, and 24h performance.`,
+      images: [coin.image.large],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${coin.name} Price - CoinHub`,
+      description: `Live ${coin.name} market data and chart.`,
+      images: [coin.image.large],
+    },
+  };
+}
+
+const CoinPage = async ({
+  params,
+}: {
+  params: Promise<{ [key: string]: string }>;
+}) => {
   const { id } = await params;
 
   if (!isValidCoinId(id)) notFound();
 
-  let coin: CoinDetailsData | null = null;
+  let coin: CoinDetails | null = null;
   let coinOHLCData: OHLCData[] | null = null;
 
   try {
@@ -27,7 +81,6 @@ const CoinPage = async ({ params }: NextPageProps) => {
       coinGeckoClient.getOHLC(id, 1).catch(() => null),
     ]);
   } catch (err) {
-    // Server log: 400/404 = coin not available or not supported on your API plan for GET /coins/{id}. 404 often means this coin isn’t available on the free/Demo tier for GET /coins/{id}.
     console.error(`[coins/${id}] Coin fetch failed:`, err instanceof Error ? err.message : err);
     notFound();
   }
@@ -36,9 +89,30 @@ const CoinPage = async ({ params }: NextPageProps) => {
 
   const { market_data: md } = coin;
   const priceChange24h = md.price_change_percentage_24h_in_currency?.usd ?? null;
+  const webPageJsonLd = buildWebPageJsonLd(
+    `/coins/${id}`,
+    `${coin.name} (${coin.symbol.toUpperCase()})`,
+    `Live ${coin.name} price, chart, and market data.`,
+  );
+  const financialQuoteJsonLd = buildFinancialQuoteJsonLd({
+    coinId: id,
+    coinName: coin.name,
+    symbol: coin.symbol,
+    priceUsd: md.current_price?.usd ?? 0,
+    marketCapUsd: md.market_cap?.usd ?? 0,
+    imageUrl: coin.image.large,
+  });
 
   return (
     <main className="container mx-auto  px-4 sm:px-6 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLdScript(webPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLdScript(financialQuoteJsonLd) }}
+      />
       <Link
         href="/coins"
         className="text-muted-foreground hover:text-foreground text-sm mb-6 inline-block"
@@ -47,11 +121,12 @@ const CoinPage = async ({ params }: NextPageProps) => {
       </Link>
 
       <header className="flex flex-wrap items-center gap-4 mb-8">
-        <Image
+        <CoinImage
           src={coin.image.large}
           alt={coin.name}
           width={64}
           height={64}
+          priority
           className="shrink-0 rounded-full"
         />
         <div>
@@ -64,12 +139,10 @@ const CoinPage = async ({ params }: NextPageProps) => {
         </div>
       </header>
 
-      {/* Desktop: chart left, stats right. Mobile: stacked (chart then stats). */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,1.2fr)_minmax(280px,1fr)] gap-8 mb-8">
-        {/* Chart column — full width on small screens, left column on lg+ */}
         <section className="min-w-0">
           {coinOHLCData?.length ? (
-            <CandlestickChart data={coinOHLCData} coinId={id}>
+            <CoinChart data={coinOHLCData} coinId={id}>
               <div className="pt-2 flex items-center gap-3">
                 <p className="text-sm text-muted-foreground">
                   {coin.name} / {coin.symbol.toUpperCase()}
@@ -78,7 +151,7 @@ const CoinPage = async ({ params }: NextPageProps) => {
                   {formatCurrency(md.current_price?.usd ?? 0)}
                 </p>
               </div>
-            </CandlestickChart>
+            </CoinChart>
           ) : (
             <div className="rounded-lg border border-border bg-muted/20 flex items-center justify-center min-h-[320px] text-muted-foreground text-sm">
               Chart data unavailable
@@ -86,7 +159,6 @@ const CoinPage = async ({ params }: NextPageProps) => {
           )}
         </section>
 
-        {/* Stats column — full width on small screens, right column on lg+ */}
         <section className="space-y-6 min-w-0">
           <div className="grid grid-cols-2 gap-4 sm:gap-6">
             <div>

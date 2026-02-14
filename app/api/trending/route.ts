@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getTrendingCoins } from '@/lib/api/cache';
+import { handleAPIError, logError } from '@/lib/errors/handler';
 
 /** GET /api/trending — trending coins (cached). */
 export async function GET() {
@@ -7,10 +8,13 @@ export async function GET() {
     const data = await getTrendingCoins();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[api/trending]', error);
+    const formatted = handleAPIError(error);
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      route: '/api/trending',
+    });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch trending' },
-      { status: 500 },
+      { error: formatted.message, code: formatted.code, timestamp: formatted.timestamp },
+      { status: formatted.statusCode },
     );
   }
 }

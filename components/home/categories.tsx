@@ -1,10 +1,11 @@
 import { getCategories } from '@/lib/api/cache';
 
-import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
 import { CategoriesFallback } from './fallback';
-import DataTable from '../data-table';
+import DataTable, { type DataTableColumn } from '../data-table';
+import CoinImage from '@/components/ui/CoinImage';
 import { PriceChangeDisplay } from '@/components/ui/price-change';
+import type { Category } from '@/types/api';
 
 const Categories = async () => {
   try {
@@ -19,7 +20,7 @@ const Categories = async () => {
         cellClassName: 'hidden sm:table-cell',
         cell: (category) =>
           category.top_3_coins.map((coin) => (
-            <Image
+            <CoinImage
               src={coin}
               alt=""
               aria-hidden

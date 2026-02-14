@@ -30,7 +30,11 @@ export interface CoinMarketInput {
   current_price: number;
   market_cap: number;
   total_volume: number;
-  price_change_percentage_24h: number;
+  /**
+   * 24h percentage change; CoinGecko may return null, so allow null here.
+   * We normalize to 0 further down when building PredictionMarket.
+   */
+  price_change_percentage_24h: number | null;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCategories } from '@/lib/api/cache';
+import { handleAPIError, logError } from '@/lib/errors/handler';
 
 /** GET /api/categories — coin categories (cached). */
 export async function GET() {
@@ -7,10 +8,13 @@ export async function GET() {
     const data = await getCategories();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[api/categories]', error);
+    const formatted = handleAPIError(error);
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      route: '/api/categories',
+    });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch categories' },
-      { status: 500 },
+      { error: formatted.message, code: formatted.code, timestamp: formatted.timestamp },
+      { status: formatted.statusCode },
     );
   }
 }

@@ -2,8 +2,9 @@ import {
   CandlestickSeriesPartialOptions,
   ChartOptions,
   ColorType,
-  DeepPartial
+  DeepPartial,
 } from 'lightweight-charts';
+import { LiveInterval, Period } from '@/types/models';
 
 /** Single source of truth for main nav; imported by Header. */
 export const navItems = [
@@ -35,7 +36,7 @@ export const getCandlestickConfig = (): CandlestickSeriesPartialOptions => ({
 
 export const getChartConfig = (
   height: number,
-  timeVisible: boolean = true,
+  timeVisible = true,
 ): DeepPartial<ChartOptions> => ({
   width: 0,
   height,
@@ -101,7 +102,7 @@ export const PERIOD_BUTTONS: { value: Period; label: string }[] = [
   { value: '3months', label: '3M' },
 ];
 
-export const LIVE_INTERVAL_BUTTONS: { value: '1s' | '1m'; label: string }[] = [
+export const LIVE_INTERVAL_BUTTONS: { value: LiveInterval; label: string }[] = [
   { value: '1s', label: '1s' },
   { value: '1m', label: '1m' },
 ];

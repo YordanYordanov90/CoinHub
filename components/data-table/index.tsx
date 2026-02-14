@@ -8,7 +8,24 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
+export interface DataTableColumn<T> {
+  header: React.ReactNode;
+  cell: (row: T, index: number) => React.ReactNode;
+  headClassName?: string;
+  cellClassName?: string;
+}
 
+export interface DataTableProps<T> {
+  columns: DataTableColumn<T>[];
+  data: T[];
+  rowKey: (row: T, index: number) => React.Key;
+  tableClassName?: string;
+  headerClassName?: string;
+  headerRowClassName?: string;
+  headerCellClassName?: string;
+  bodyRowClassName?: string;
+  bodyCellClassName?: string;
+}
 
 const DataTable =<T,>({
   columns,

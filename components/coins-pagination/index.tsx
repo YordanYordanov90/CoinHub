@@ -11,6 +11,12 @@ import {
 import { useRouter } from 'next/navigation';
 import { buildPageNumbers, cn, ELLIPSIS } from '@/lib/utils';
 
+
+ interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  hasMorePages: boolean;
+}
 const CoinsPagination = ({ currentPage, totalPages, hasMorePages }: Pagination) => {
   const router = useRouter();
 

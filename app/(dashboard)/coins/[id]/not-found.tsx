@@ -6,7 +6,8 @@ export default function CoinNotFound() {
       <div className="max-w-md mx-auto text-center space-y-4">
         <h1 className="text-xl font-semibold">Coin not available</h1>
         <p className="text-muted-foreground text-sm">
-          This coin&apos;s details are only available on a paid API plan. The free tier supports a limited set of coins. Please try again later.
+          This coin&apos;s details are only available on a paid API plan. The free tier supports
+          a limited set of coins. Please try again later.
         </p>
         <Link
           href="/coins"

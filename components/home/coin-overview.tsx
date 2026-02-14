@@ -1,14 +1,15 @@
 import { getCoinDetails } from '@/lib/api/cache';
 import { coinGeckoClient } from '@/lib/api/client';
 import { formatCurrency } from '@/lib/utils';
-import Image from 'next/image';
+import type { CoinDetails, OHLCData } from '@/types/api';
 import CandlestickChart from '../candlestick-chart';
+import CoinImage from '@/components/ui/CoinImage';
 import { CoinOverviewFallback } from './fallback';
 
 const COIN_ID = 'bitcoin';
 
 const CoinOverview = async () => {
-  let coin: CoinDetailsData | null = null;
+  let coin: CoinDetails | null = null;
   let coinOHLCData: OHLCData[] | null = null;
 
   try {
@@ -30,11 +31,12 @@ const CoinOverview = async () => {
       <div className="flex-1 min-h-0 flex flex-col">
         <CandlestickChart data={coinOHLCData} coinId={COIN_ID}>
         <div className="pt-2 flex items-center gap-3">
-          <Image
+          <CoinImage
             src={coin.image.large}
             alt={coin.name}
             width={48}
             height={48}
+            priority
             className="shrink-0 rounded-full"
           />
           <div className="min-w-0">

@@ -1,14 +1,22 @@
-import Image from 'next/image';
+'use client';
+
 import Link from 'next/link';
+import { Heart } from 'lucide-react';
+import CoinImage from '@/components/ui/CoinImage';
 import { formatCurrency } from '@/lib/utils';
 import { PriceChangeDisplay } from '@/components/ui/price-change';
 import type { PredictionMarket } from '@/lib/predictions/types';
+import { useCryptoStore } from '@/lib/store/useCryptoStore';
 
 interface PredictionMarketCardProps {
   market: PredictionMarket;
 }
 
 export default function PredictionMarketCard({ market }: PredictionMarketCardProps) {
+  const favorites = useCryptoStore((state) => state.favorites);
+  const toggleFavorite = useCryptoStore((state) => state.toggleFavorite);
+  const isFavorite = favorites.includes(market.coinId);
+
   const formattedEndDate = new Date(market.endDate).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
@@ -24,7 +32,7 @@ export default function PredictionMarketCard({ market }: PredictionMarketCardPro
             className="shrink-0 rounded-full ring-2 ring-border/60 transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={`View ${market.name} details`}
           >
-            <Image
+            <CoinImage
               src={market.image}
               alt=""
               width={48}
@@ -44,6 +52,16 @@ export default function PredictionMarketCard({ market }: PredictionMarketCardPro
               <PriceChangeDisplay value={market.priceChangePercentage24h} size="sm" />
             </p>
           </div>
+          <button
+            type="button"
+            aria-label={isFavorite ? `Remove ${market.name} from favorites` : `Add ${market.name} to favorites`}
+            onClick={() => toggleFavorite(market.coinId)}
+            className="inline-flex items-center justify-center rounded-md p-1 hover:bg-accent"
+          >
+            <Heart
+              className={`size-5 ${isFavorite ? 'fill-current text-orange-500' : 'text-muted-foreground'}`}
+            />
+          </button>
         </div>
 
         <p className="text-sm font-medium text-foreground">
