@@ -8,7 +8,7 @@ import { LiveInterval, Period } from '@/types/models';
 
 /** Single source of truth for main nav; imported by Header. */
 export const navItems = [
-  { label: 'Home', href: '/' },
+  { label: 'Markets', href: '/markets' },
   { label: 'Search', href: '/search' },
   { label: 'All Coins', href: '/coins' },
   { label: 'Predictions', href: '/predictions' },
