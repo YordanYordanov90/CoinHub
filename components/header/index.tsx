@@ -100,9 +100,12 @@ const Header = () => {
         {isMobile && (
           <ChevronRight className="size-5 text-muted-foreground" aria-hidden="true" />
         )}
-        {isActive && (
+        {!isMobile && (
           <span
-            className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full"
+            className={cn(
+              "absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full transition-all duration-300 ease-out",
+              isActive ? "opacity-100 scale-100" : "opacity-0 scale-75"
+            )}
             aria-hidden
           />
         )}
@@ -111,7 +114,7 @@ const Header = () => {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
@@ -199,7 +202,7 @@ const Header = () => {
           type="button"
           onClick={() => setIsOpen(false)}
           className={cn(
-            "absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity",
+            "absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-300",
             isOpen ? "opacity-100" : "opacity-0"
           )}
           aria-label="Close menu"
@@ -213,11 +216,11 @@ const Header = () => {
           aria-label="Navigation menu"
           tabIndex={-1}
           className={cn(
-            "absolute top-0 right-0 h-full w-[min(22rem,88vw)] bg-card border-l border-border shadow-xl outline-none transition-transform duration-200 ease-out",
+            "absolute top-0 right-0 h-full w-[min(22rem,88vw)] bg-card border-l border-border shadow-xl outline-none transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
             isOpen ? "translate-x-0" : "translate-x-full"
           )}
         >
-          <div className="flex items-center justify-between border-b border-border p-4">
+          <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
@@ -236,40 +239,48 @@ const Header = () => {
             </button>
           </div>
 
-          <div className="flex flex-col gap-1 p-3">
-            {navItems.map((item) =>
-              item.href === "/search" ? (
-                <button
-                  key={item.href}
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false)
-                    setSearchOpen(true)
-                  }}
-                  className={cn(
-                    "relative flex w-full items-center justify-between gap-2 py-3 px-4 text-base rounded-lg",
-                    "text-muted-foreground hover:bg-accent hover:text-foreground",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  )}
-                  aria-label="Open search"
-                >
-                  <span className="inline-flex items-center gap-3">
-                    <Search className="size-5" aria-hidden="true" />
-                    <span>{item.label}</span>
-                  </span>
-                  <ChevronRight className="size-5 text-muted-foreground" aria-hidden="true" />
-                </button>
-              ) : (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={iconByHref[item.href]}
-                  isMobile
-                  onNavigate={() => setIsOpen(false)}
-                />
-              )
-            )}
+          <div className="flex flex-col gap-1 p-3 overflow-hidden">
+            {navItems.map((item, index) => (
+              <div
+                key={item.href}
+                className={cn(
+                  "transition-all duration-300 transform",
+                  isOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                )}
+                style={{ transitionDelay: isOpen ? `${150 + index * 50}ms` : '0ms' }}
+              >
+                {item.href === "/search" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false)
+                      setSearchOpen(true)
+                    }}
+                    className={cn(
+                      "relative flex w-full items-center justify-between gap-2 py-3 px-4 text-base rounded-lg",
+                      "text-muted-foreground hover:bg-accent hover:text-foreground active:bg-accent/80 active:scale-[0.98] transition-all",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    )}
+                    aria-label="Open search"
+                  >
+                    <span className="inline-flex items-center gap-3">
+                      <Search className="size-5" aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </span>
+                    <ChevronRight className="size-5 text-muted-foreground" aria-hidden="true" />
+                  </button>
+                ) : (
+                  <NavLink
+                    href={item.href}
+                    label={item.label}
+                    icon={iconByHref[item.href]}
+                    isMobile
+                    className="active:bg-accent/80 active:scale-[0.98] transition-all"
+                    onNavigate={() => setIsOpen(false)}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>

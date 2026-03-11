@@ -92,6 +92,7 @@ const HomePage = async () => {
           <Categories />
         </Suspense>
       </section>
+      
     </main>
   );
 };

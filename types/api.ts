@@ -154,7 +154,7 @@ export const CoinDetailsSchema = z.object({
   links: z.object({
     homepage: z.array(z.string().url()).optional(),
     blockchain_site: z.array(z.string()).optional(),
-    subreddit_url: z.string().optional(),
+    subreddit_url: z.string().nullable().optional(),
   }),
   tickers: z.array(CoinGeckoTickerSchema),
 });
